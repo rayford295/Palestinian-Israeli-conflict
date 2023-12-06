@@ -1,0 +1,2 @@
+lexical_richness,avg_sentence_length,most_common_words,pos_distribution
+0.43991416309012876,932.0,"{'al': 56, 'jazeera': 56, 'english': 56, 'war': 32, 'gaza': 32, 'conflict': 30, 'israel': 26, 'israelhamas': 18, 'israelipalestinian': 17, 'israeli': 14}","{'JJ': 221, 'NN': 375, 'VBZ': 25, 'IN': 12, 'NNS': 135, 'VBP': 77, 'NNP': 5, 'VBD': 19, 'RB': 22, 'VBG': 16, 'VBN': 8, 'JJS': 3, 'VB': 4, 'PRP': 4, 'MD': 1, 'DT': 1, 'CD': 3, 'RP': 1}"

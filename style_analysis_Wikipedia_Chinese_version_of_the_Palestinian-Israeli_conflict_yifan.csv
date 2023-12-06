@@ -1,0 +1,2 @@
+lexical_richness,avg_sentence_length,most_common_words,pos_distribution
+0.3733133433283358,4669.0,"{'以色列': 175, '年': 72, '巴勒斯坦': 69, '犹太人': 46, '月': 41, '加沙': 37, '年月日': 33, '与': 32, '美国': 32, '对': 32}","{'JJ': 1, 'NNP': 4667, 'NN': 1}"

@@ -1,0 +1,2 @@
+lexical_richness,avg_sentence_length,most_common_words,pos_distribution
+0.34717199479242006,6913.0,"{'palestinian': 173, 'israel': 130, 'israeli': 117, 'gaza': 69, 'palestinians': 69, 'west': 64, 'bank': 60, 'arab': 53, 'conflict': 50, 'palestine': 50}","{'NNS': 1010, 'JJ': 1641, 'NN': 2318, 'VBG': 277, 'CD': 55, 'VBN': 210, 'VBP': 272, 'IN': 125, 'JJR': 10, 'VBD': 452, 'RB': 251, 'JJS': 58, 'VBZ': 80, 'DT': 8, 'VB': 56, 'NNP': 13, 'MD': 34, 'RBR': 9, 'CC': 6, 'FW': 9, 'PRP': 16, 'WP$': 1, 'WRB': 1, 'RP': 1}"
