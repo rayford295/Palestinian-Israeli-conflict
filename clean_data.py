@@ -12,191 +12,68 @@ import re
 import jieba
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# 加载数据
-file_path = '/content/Chinese_version_of_Google_News_crawling_yifan.csv'  # 替换为您的 CSV 文件路径
-data = pd.read_csv(file_path)
+def yifan_clean_chinese_text(text):
+    """
+    Cleans Chinese text by keeping only Chinese characters.
+    """
+    return ''.join(re.findall(r'[\u4e00-\u9fff]+', text))
 
-# 清理文本：只保留汉字
-data['title_cleaned'] = data['title'].apply(lambda x: ''.join(re.findall(r'[\u4e00-\u9fff]+', x)))
+def yifan_segment_text(text, stopwords, language='Chinese'):
+    """
+    Segments text using jieba for Chinese or simple split for English and removes stopwords.
+    """
+    if language == 'Chinese':
+        words = jieba.cut(text)
+    else:  # English
+        words = text.split()
+    return ' '.join(word for word in words if word not in stopwords)
 
-# 使用 jieba 进行分词
-data['title_segmented'] = data['title_cleaned'].apply(lambda x: ' '.join(jieba.cut(x)))
+def yifan_process_dataset(file_path, language, stopwords):
+    """
+    Processes the dataset by reading, cleaning, segmenting, and creating a TF-IDF matrix.
+    Returns the processed DataFrame and the TF-IDF matrix.
+    """
+    data = pd.read_csv(file_path)
+    text_column = 'title' if 'Google_News' in file_path else 'Content'
 
-# 停用词表
-stopwords = set([
-    "的", "了", "在", "是", "我", "有", "和", "就",
-    "不", "人", "都", "一", "一个", "上", "也", "很",
-    "到", "说", "要", "去", "你", "会", "着", "没有",
-    "看", "好", "自己", "这"
-    # 可根据需要添加更多停用词
-])
+    # Ensure the column is treated as string
+    data[text_column] = data[text_column].astype(str)
 
-# 去除停用词
-data['title_segmented'] = data['title_segmented'].apply(lambda x: ' '.join(word for word in x.split() if word not in stopwords))
+    if language == 'Chinese':
+        data['text_cleaned'] = data[text_column].apply(yifan_clean_chinese_text)
+    else:  # English
+        data['text_cleaned'] = data[text_column].apply(lambda x: x.lower())
+        data['text_cleaned'] = data['text_cleaned'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x))
 
-# 将文本转换为 TF-IDF 向量（这里不会实际输出向量，只是作为数据处理的一部分）
-vectorizer = TfidfVectorizer()
-tfidf_matrix = vectorizer.fit_transform(data['title_segmented'])
+    data['text_processed'] = data['text_cleaned'].apply(lambda x: yifan_segment_text(x, stopwords, language))
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(data['text_processed'])
+    return data, tfidf_matrix
 
-# 保存预处理后的数据到 CSV
-output_path = 'preprocessed_Chinese_version_of_Google_News_crawling_yifan.csv'  # 您希望保存的文件路径
-data.to_csv(output_path, index=False)
+# Define stopwords for Chinese and English
+yifan_chinese_stopwords = set(["的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好", "自己", "这"])
+yifan_english_stopwords = set(['the', 'and', 'is', 'in', 'to', 'of', 'a', 'for', 'on', 'with', 'as', 'by', 'that', 'this', 'it', 'are', 'at', 'be', 'from', 'or', 'an', 'was', 'will', 'not', 'have', 'has', 'had', 'its', 'it\'s', 'you', 'your', 'they', 'their', 'what', 'which'])
 
-import pandas as pd
-import re
-
-# 加载数据
-file_path = '/content/English_version_of_Google_News_crawling_yifan.csv'
-data = pd.read_csv(file_path)
-
-# 文本预处理
-# 1. 转换为小写
-data['title_cleaned'] = data['title'].apply(lambda x: x.lower())
-
-# 2. 移除特殊字符
-data['title_cleaned'] = data['title_cleaned'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x))
-
-# 3. 简单分词
-data['title_tokenized'] = data['title_cleaned'].apply(lambda x: x.split())
-
-# 4. 基本停用词去除
-simple_stopwords = {'the', 'and', 'is', 'in', 'to', 'of', 'a', 'for', 'on', 'with', 'as', 'by', 'that', 'this', 'it', 'are', 'at', 'be', 'from', 'or', 'an', 'was', 'will', 'not', 'have', 'has', 'had', 'its', 'it\'s', 'you', 'your', 'they', 'their', 'what', 'which'}
-data['title_processed'] = data['title_tokenized'].apply(lambda x: [word for word in x if word not in simple_stopwords])
-
-# 5. 重新组合为字符串
-data['title_processed'] = data['title_processed'].apply(lambda x: ' '.join(x))
-
-# 将文本转换为 TF-IDF 向量
-vectorizer = TfidfVectorizer()
-tfidf_matrix = vectorizer.fit_transform(data['title_processed'])
-
-# 保存预处理后的数据到 CSV 文件
-output_path = 'preprocessed_English_version_of_Google_News_crawling_yifan.csv'
-data.to_csv(output_path, index=False)
-
-output_path
-
-import pandas as pd
-import re
-import jieba
-
-# 加载数据
-file_path = '/content/Wikipedia_Chinese_version_of_the_Palestinian-Israeli_conflict_yifan.csv'  # 替换为您的文件路径
-data = pd.read_csv(file_path)
-
-# 清理文本：只保留汉字
-data['content_cleaned'] = data['Content'].apply(lambda x: ''.join(re.findall(r'[\u4e00-\u9fff]+', x)))
-
-# 使用 jieba 进行分词
-data['content_segmented'] = data['content_cleaned'].apply(lambda x: ' '.join(jieba.cut(x)))
-
-# 使用基础停用词表去除停用词
-chinese_stopwords = set([
-    "的", "了", "在", "是", "我", "有", "和", "就",
-    "不", "人", "都", "一", "一个", "上", "也", "很",
-    "到", "说", "要", "去", "你", "会", "着", "没有",
-    "看", "好", "自己", "这"
-    # 可以根据需要添加更多停用词
-])
-
-data['content_processed'] = data['content_segmented'].apply(lambda x: ' '.join(word for word in x.split() if word not in chinese_stopwords))
-
-# 保存预处理后的数据到 CSV 文件
-output_path = 'preprocessed_Wikipedia_Chinese_version_of_the_Palestinian-Israeli_conflict_yifan.csv'  # 指定输出文件的路径
-data.to_csv(output_path, index=False)
-
-import pandas as pd
-import re
-
-# 加载数据
-file_path = '/content/Wikipedia_English_version_of_the_Palestinian-Israeli_conflict_yifan.csv'
-data = pd.read_csv(file_path)
-
-# 确保所有内容都是字符串类型
-data['Content'] = data['Content'].astype(str)
-
-# 硬编码的简单英文停用词列表
-simple_english_stopwords = set([
-    'the', 'and', 'is', 'in', 'to', 'of', 'a', 'for',
-    'on', 'with', 'as', 'by', 'that', 'this', 'it',
-    'are', 'at', 'be', 'from', 'or', 'an', 'was',
-    'will', 'not', 'have', 'has', 'had', 'its',
-    'it\'s', 'you', 'your', 'they', 'their', 'what',
-    'which'
-])
-
-# 文本预处理
-# 1. 转换为小写
-data['content_cleaned'] = data['Content'].apply(lambda x: x.lower())
-
-# 2. 移除特殊字符
-data['content_cleaned'] = data['content_cleaned'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x))
-
-# 3. 简单分词
-data['content_tokenized'] = data['content_cleaned'].apply(lambda x: x.split())
-
-# 4. 去除停用词
-data['content_processed'] = data['content_tokenized'].apply(lambda x: [word for word in x if word not in simple_english_stopwords])
-
-# 5. 重新组合为字符串
-data['content_processed'] = data['content_processed'].apply(lambda x: ' '.join(x))
-
-# 保存预处理后的数据到 CSV 文件
-output_path = 'preprocessed_Wikipedia_English_version_of_the_Palestinian-Israeli_conflict_yifan.csv'
-data.to_csv(output_path, index=False)
-
-import pandas as pd
-import re
-import jieba
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-# 处理第一个数据集：Chinese_version_of_Google_News_crawling_yifan.csv
+# Process datasets
 file_path1 = '/content/Chinese_version_of_Google_News_crawling_yifan.csv'
-data1 = pd.read_csv(file_path1)
-data1['title_cleaned'] = data1['title'].apply(lambda x: ''.join(re.findall(r'[\u4e00-\u9fff]+', x)))
-data1['title_segmented'] = data1['title_cleaned'].apply(lambda x: ' '.join(jieba.cut(x)))
-stopwords1 = set(["的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好", "自己", "这"])
-data1['title_segmented'] = data1['title_segmented'].apply(lambda x: ' '.join(word for word in x.split() if word not in stopwords1))
-vectorizer1 = TfidfVectorizer()
-tfidf_matrix1 = vectorizer1.fit_transform(data1['title_segmented'])
+data1, tfidf_matrix1 = yifan_process_dataset(file_path1, 'Chinese', yifan_chinese_stopwords)
 output_path1 = 'preprocessed_Chinese_version_of_Google_News_crawling_yifan.csv'
 data1.to_csv(output_path1, index=False)
 
-# ...
-# 处理第二个数据集：English_version_of_Google_News_crawling_yifan.csv
+# English_version_of_Google_News_crawling_yifan.csv
 file_path2 = '/content/English_version_of_Google_News_crawling_yifan.csv'
-data2 = pd.read_csv(file_path2)
-data2['title_cleaned'] = data2['title'].apply(lambda x: x.lower())
-data2['title_cleaned'] = data2['title_cleaned'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x))
-data2['title_tokenized'] = data2['title_cleaned'].apply(lambda x: x.split())
-simple_stopwords2 = {'the', 'and', 'is', 'in', 'to', 'of', 'a', 'for', 'on', 'with', 'as', 'by', 'that', 'this', 'it', 'are', 'at', 'be', 'from', 'or', 'an', 'was', 'will', 'not', 'have', 'has', 'had', 'its', 'it\'s', 'you', 'your', 'they', 'their', 'what', 'which'}
-data2['title_processed'] = data2['title_tokenized'].apply(lambda x: ' '.join([word for word in x if word not in simple_stopwords2]))
-vectorizer2 = TfidfVectorizer()
-tfidf_matrix2 = vectorizer2.fit_transform(data2['title_processed'])
+data2, tfidf_matrix2 = yifan_process_dataset(file_path2, 'English', yifan_english_stopwords)
 output_path2 = 'preprocessed_English_version_of_Google_News_crawling_yifan.csv'
 data2.to_csv(output_path2, index=False)
-# ...
 
-
-# 处理第三个数据集：Wikipedia_Chinese_version_of_the_Palestinian-Israeli_conflict_yifan.csv
+# Wikipedia_Chinese_version_of_the_Palestinian-Israeli_conflict_yifan.csv
 file_path3 = '/content/Wikipedia_Chinese_version_of_the_Palestinian-Israeli_conflict_yifan.csv'
-data3 = pd.read_csv(file_path3)
-data3['content_cleaned'] = data3['Content'].apply(lambda x: ''.join(re.findall(r'[\u4e00-\u9fff]+', x)))
-data3['content_segmented'] = data3['content_cleaned'].apply(lambda x: ' '.join(jieba.cut(x)))
-chinese_stopwords3 = set(["的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好", "自己", "这"])
-data3['content_processed'] = data3['content_segmented'].apply(lambda x: ' '.join(word for word in x.split() if word not in chinese_stopwords3))
+data3, tfidf_matrix3 = yifan_process_dataset(file_path3, 'Chinese', yifan_chinese_stopwords)
 output_path3 = 'preprocessed_Wikipedia_Chinese_version_of_the_Palestinian-Israeli_conflict_yifan.csv'
 data3.to_csv(output_path3, index=False)
 
-# 处理第四个数据集：Wikipedia_English_version_of_the_Palestinian-Israeli_conflict_yifan.csv
+# Wikipedia_English_version_of_the_Palestinian-Israeli_conflict_yifan.csv
 file_path4 = '/content/Wikipedia_English_version_of_the_Palestinian-Israeli_conflict_yifan.csv'
-data4 = pd.read_csv(file_path4)
-data4['Content'] = data4['Content'].astype(str)
-simple_english_stopwords4 = set(['the', 'and', 'is', 'in', 'to', 'of', 'a', 'for', 'on', 'with', 'as', 'by', 'that', 'this', 'it', 'are', 'at', 'be', 'from', 'or', 'an', 'was', 'will', 'not', 'have', 'has', 'had', 'its', 'it\'s', 'you', 'your', 'they', 'their', 'what', 'which'])
-data4['content_cleaned'] = data4['Content'].apply(lambda x: x.lower())
-data4['content_cleaned'] = data4['content_cleaned'].apply(lambda x: re.sub(r'[^a-zA-Z\s]', '', x))
-data4['content_tokenized'] = data4['content_cleaned'].apply(lambda x: x.split())
-data4['content_processed'] = data4['content_tokenized'].apply(lambda x: [word for word in x if word not in simple_english_stopwords4])
-data4['content_processed'] = data4['content_processed'].apply(lambda x: ' '.join(x))
+data4, tfidf_matrix4 = yifan_process_dataset(file_path4, 'English', yifan_english_stopwords)
 output_path4 = 'preprocessed_Wikipedia_English_version_of_the_Palestinian-Israeli_conflict_yifan.csv'
 data4.to_csv(output_path4, index=False)
